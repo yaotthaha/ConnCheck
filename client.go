@@ -21,12 +21,11 @@ func ClientRun(Config ClientConfigStruct) {
 	go func() {
 		for {
 			Conn, err := net.Dial("tcp", net.JoinHostPort(Config.DialAddr, strconv.Itoa(int(Config.DialPort))))
-			if err != nil {
-				Logout(-1, err)
+			if err == nil {
+				ConnPool <- &Conn
+				<-RetryChan
+				_ = Conn.Close()
 			}
-			ConnPool <- &Conn
-			<-RetryChan
-			_ = Conn.Close()
 			if Config.Retry < 0 {
 				<-time.After(2 * time.Second)
 				continue
