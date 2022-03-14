@@ -36,9 +36,6 @@ func ReadConfig(FileName string, Mode string) (interface{}, error) {
 		if ServerConfig.Terminal != "" {
 			ServerTerminalArg = ServerConfig.TerminalArg
 		}
-		if ServerConfig.ReConnectTry != 0 {
-			ReConnectTry = int(ServerConfig.ReConnectTry)
-		}
 		if len(ServerConfig.ClientSettingInServer) <= 0 {
 			return nil, errors.New("clients settings is nil")
 		}
@@ -48,6 +45,9 @@ func ReadConfig(FileName string, Mode string) (interface{}, error) {
 				return nil, errors.New("client[" + v.Name + "] invalid name, has been existed")
 			} else {
 				NameMap[v.Name] = struct{}{}
+			}
+			if v.BrokenLineRetry == 0 {
+				//
 			}
 			if v.PrivateKey == "" {
 				return nil, errors.New("client[" + v.Name + "] invalid private key")

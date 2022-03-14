@@ -20,7 +20,7 @@ type ClientSetting struct { // 运行池子项
 	Setting struct {
 		Name                string
 		PrivateKey          []byte
-		BrokenLineTimeout   uint64
+		BrokenLineRetry     uint64
 		BrokenLineRunScript string
 		OnlineRunScript     string
 	}
@@ -52,8 +52,8 @@ func ServerRun(Config ServerConfigStruct) {
 		TempSetting.RunParams.Retry = 0      // 重试次数
 		TempSetting.RunParams.ReconnectedTag = false
 		TempSetting.Setting.PrivateKey = []byte(v.PrivateKey)
-		TempSetting.Setting.BrokenLineTimeout = v.BrokenLineTimeout
-		TempSetting.Setting.BrokenLineRunScript = v.OnlineRunScript
+		TempSetting.Setting.BrokenLineRetry = v.BrokenLineRetry
+		TempSetting.Setting.BrokenLineRunScript = v.BrokenLineRunScript
 		TempSetting.Setting.OnlineRunScript = v.OnlineRunScript
 		TempSetting.TimePool.Mu = &sync.Mutex{}
 		TempSetting.TimePool.Time = nil
@@ -118,8 +118,8 @@ func PoolRun() {
 			<-time.After(1 * time.Second)
 			if c.RunParams.Status {
 				c.TimePool.Mu.Lock()
-				if c.TimePool.Time.Add(time.Duration(c.Setting.BrokenLineTimeout) * time.Second).Before(*TimeNow()) {
-					if c.RunParams.Retry == ReConnectTry {
+				if c.TimePool.Time.Add(SendTime + 1*time.Second).Before(*TimeNow()) {
+					if c.RunParams.Retry == int(c.Setting.BrokenLineRetry) {
 						Logout(1, "["+c.Setting.Name+"] Offline")
 						c.TimePool.Time = nil
 						c.TimePool.Mu.Unlock()
