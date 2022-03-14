@@ -89,7 +89,33 @@ func ServerRun(Config ServerConfigStruct) {
 }
 
 func PoolRun() {
+	//
+	//检测是否在线
+	//--- 是
+	//  检测Conn时间
+	//  --- 超时
+	//    重试过期
+	//    --- 是
+	//      -- 运行脚本
+	//      -- SetRetry => 0
+	//      -- SetStatus => false
+	//      -- SetConnTime => nil
+	//    --- 否
+	//      -- SetRetry++
+	//  --- 未超时
+	//      -- SetRetry => 0
+	//--- 否
+	//  检测Conn时间
+	//  --- 有
+	//    -- SetStatus => true
+	//    -- 运行脚本
+	//    -- JUMP
+	//  --- 没有
+	//    -- JUMP
+	//
+	var wg sync.WaitGroup
 	Run := func(c *ClientSetting) {
+		defer wg.Done()
 		for {
 			<-time.After(1 * time.Second)
 			if c.RunParams.Status {
@@ -136,15 +162,24 @@ func PoolRun() {
 		}
 	}
 	for {
+		BreakTag := false
 		select {
 		case ClientData := <-ClientRunChan:
 			if _, ok := ClientRunningPool[ClientData.ID]; ok {
 				continue
 			}
 			ClientRunningPool[ClientData.ID] = &ClientData
+			wg.Add(1)
 			go Run(ClientRunningPool[ClientData.ID])
+		default:
+			BreakTag = true
+			break
+		}
+		if BreakTag {
+			break
 		}
 	}
+	wg.Wait()
 }
 
 func CacheDel() {
