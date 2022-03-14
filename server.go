@@ -17,7 +17,6 @@ type ClientRunParamsStruct struct {
 }
 
 type ClientSetting struct { // 运行池子项
-	ID      string
 	Setting struct {
 		Name                string
 		PrivateKey          []byte
@@ -48,7 +47,6 @@ func ServerRun(Config ServerConfigStruct) {
 	ClientRunningPool = make(map[string]*ClientSetting)                         // 初始化运行池
 	for _, v := range Config.ClientSettingInServer {                            // 客户端配置丢进运行通道
 		var TempSetting ClientSetting
-		TempSetting.ID = GenRandomString(8)
 		TempSetting.Setting.Name = v.Name
 		TempSetting.RunParams.Status = false // 运行状态 false offline true online
 		TempSetting.RunParams.Retry = 0      // 重试次数
@@ -81,7 +79,7 @@ func ServerRun(Config ServerConfigStruct) {
 			if err != nil {
 				_ = conn.Close()
 			} else {
-				Logout(1, "New Client ["+ClientRunningPool[c].ID+" "+ClientRunningPool[c].Setting.Name+"]")
+				Logout(1, "New Client ["+ClientRunningPool[c].Setting.Name+"]")
 				go Handler(conn, c)
 			}
 		}(Conn)
@@ -165,12 +163,9 @@ func PoolRun() {
 		BreakTag := false
 		select {
 		case ClientData := <-ClientRunChan:
-			if _, ok := ClientRunningPool[ClientData.ID]; ok {
-				continue
-			}
-			ClientRunningPool[ClientData.ID] = &ClientData
+			ClientRunningPool[ClientData.Setting.Name] = &ClientData
 			wg.Add(1)
-			go Run(ClientRunningPool[ClientData.ID])
+			go Run(ClientRunningPool[ClientData.Setting.Name])
 		default:
 			BreakTag = true
 			break

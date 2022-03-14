@@ -42,7 +42,13 @@ func ReadConfig(FileName string, Mode string) (interface{}, error) {
 		if len(ServerConfig.ClientSettingInServer) <= 0 {
 			return nil, errors.New("clients settings is nil")
 		}
+		NameMap := make(map[string]struct{})
 		for k, v := range ServerConfig.ClientSettingInServer {
+			if _, ok := NameMap[v.Name]; ok {
+				return nil, errors.New("client[" + v.Name + "] invalid name, has been existed")
+			} else {
+				NameMap[v.Name] = struct{}{}
+			}
 			if v.PrivateKey == "" {
 				return nil, errors.New("client[" + v.Name + "] invalid private key")
 			} else if Pri, err := Base64Decode([]byte(v.PrivateKey)); err != nil {
