@@ -121,7 +121,7 @@ func PoolRun() {
 			if c.RunParams.Status {
 				c.TimePool.Mu.Lock()
 				if c.TimePool.Time.Add(time.Duration(c.Setting.BrokenLineTimeout) * time.Second).Before(*TimeNow()) {
-					if c.RunParams.Retry == 6 {
+					if c.RunParams.Retry == ReConnectTry {
 						Logout(1, "["+c.Setting.Name+"] Offline")
 						c.TimePool.Time = nil
 						c.TimePool.Mu.Unlock()

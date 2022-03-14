@@ -24,7 +24,7 @@ func ReadConfig(FileName string, Mode string) (interface{}, error) {
 		if err != nil {
 			return nil, errors.New("read config file fail: " + err.Error())
 		}
-		if ServerConfig.ListenAddr == "" {
+		if net.ParseIP(ServerConfig.ListenAddr) == nil {
 			return nil, errors.New("invalid addr")
 		}
 		if ServerConfig.ListenPort == 0 {
@@ -35,6 +35,9 @@ func ReadConfig(FileName string, Mode string) (interface{}, error) {
 		}
 		if ServerConfig.Terminal != "" {
 			ServerTerminalArg = ServerConfig.TerminalArg
+		}
+		if ServerConfig.ReConnectTry != 0 {
+			ReConnectTry = int(ServerConfig.ReConnectTry)
 		}
 		if len(ServerConfig.ClientSettingInServer) <= 0 {
 			return nil, errors.New("clients settings is nil")
@@ -55,7 +58,7 @@ func ReadConfig(FileName string, Mode string) (interface{}, error) {
 		if err != nil {
 			return nil, errors.New("read config file fail: " + err.Error())
 		}
-		if net.ParseIP(ClientConfig.DialAddr) == nil {
+		if ClientConfig.DialAddr == "" {
 			return nil, errors.New("invalid addr")
 		}
 		if ClientConfig.DialPort == 0 {

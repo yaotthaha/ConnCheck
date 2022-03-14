@@ -4,7 +4,7 @@ import "time"
 
 const (
 	AppName    = "ConnCheck"
-	AppVersion = "v0.0.1-build-7"
+	AppVersion = "v0.0.1-build-8"
 	AppAuthor  = "Yaott"
 )
 
@@ -12,6 +12,7 @@ var (
 	SendTime          = 3 * time.Second
 	ServerTerminal    = "/bin/bash"
 	ServerTerminalArg = "-c"
+	ReConnectTry      = 6
 )
 
 type ServerConfigStruct struct {
@@ -19,6 +20,7 @@ type ServerConfigStruct struct {
 	ListenPort            uint16 `json:"port"`
 	Terminal              string `json:"terminal"`
 	TerminalArg           string `json:"terminal_arg"`
+	ReConnectTry          uint   `json:"reconnect_try"`
 	ClientSettingInServer []struct {
 		Name                string `json:"name"`               // 客户端名
 		PrivateKey          string `json:"private_key"`        // ECC 私钥
