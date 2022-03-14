@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -12,29 +13,36 @@ func ClientRun(Config ClientConfigStruct) {
 	RetryChan := make(chan struct{})
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+	var Retry struct {
+		Mu    sync.Mutex
+		Value int
+	}
+	Retry.Value = 0
 	go func() {
-		Retry := 0
 		for {
 			Conn, err := net.Dial("tcp", net.JoinHostPort(Config.DialAddr, strconv.Itoa(int(Config.DialPort))))
 			if err != nil {
-				Logout(2, err)
-			} else {
-				Logout(1, "Connected Server "+net.JoinHostPort(Config.DialAddr, strconv.Itoa(int(Config.DialPort))))
-				ConnPool <- &Conn
-				<-RetryChan
+				Logout(-1, err)
 			}
-			if Config.Retry < -1 {
-				Logout(2, "Server Connect Fail")
+			ConnPool <- &Conn
+			<-RetryChan
+			_ = Conn.Close()
+			if Config.Retry < 0 {
 				<-time.After(2 * time.Second)
 				continue
 			} else if Config.Retry == 0 {
 				Logout(-1, "Server Connect Fail")
 				break
-			} else if Retry == Config.Retry {
-				Logout(-1, "Server Connect Fail")
-				break
 			} else {
-				Retry++
+				Retry.Mu.Lock()
+				if Retry.Value == Config.Retry {
+					Retry.Mu.Unlock()
+					Logout(-1, "Server Connect Fail")
+					break
+				} else {
+					Retry.Value++
+					Retry.Mu.Unlock()
+				}
 			}
 		}
 		cancel()
@@ -53,18 +61,17 @@ func ClientRun(Config ClientConfigStruct) {
 				}
 				_, err = (*Conn).Write(msg)
 				if err != nil {
-					_, err = (*Conn).Write(msg)
-					if err != nil {
-						_ = (*Conn).Close()
-						Logout(2, "Send Msg Fail, Reconnect Server")
-						RetryChan <- struct{}{}
-						BreakTag = true
-					}
+					Logout(2, "Send Msg Fail, Reconnect Server")
+					RetryChan <- struct{}{}
+					BreakTag = true
 				}
+				Retry.Mu.Lock()
+				Retry.Value = 0
+				Retry.Mu.Unlock()
 				if BreakTag {
 					break
 				} else {
-					<-time.After(3 * time.Second)
+					<-time.After(SendTime)
 				}
 			}
 		case <-ctx.Done():
