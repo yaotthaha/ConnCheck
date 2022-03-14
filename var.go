@@ -4,7 +4,7 @@ import "time"
 
 const (
 	AppName    = "ConnCheck"
-	AppVersion = "v0.0.1-build-5"
+	AppVersion = "v0.0.1-build-7"
 	AppAuthor  = "Yaott"
 )
 

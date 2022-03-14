@@ -24,7 +24,7 @@ func ReadConfig(FileName string, Mode string) (interface{}, error) {
 		if err != nil {
 			return nil, errors.New("read config file fail: " + err.Error())
 		}
-		if net.ParseIP(ServerConfig.ListenAddr) == nil {
+		if ServerConfig.ListenAddr == "" {
 			return nil, errors.New("invalid addr")
 		}
 		if ServerConfig.ListenPort == 0 {

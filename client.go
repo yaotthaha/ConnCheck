@@ -24,6 +24,7 @@ func ClientRun(Config ClientConfigStruct) {
 				<-RetryChan
 			}
 			if Config.Retry < -1 {
+				Logout(2, "Server Connect Fail")
 				continue
 			} else if Config.Retry == 0 {
 				Logout(-1, "Server Connect Fail")
